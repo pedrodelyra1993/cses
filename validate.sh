@@ -19,26 +19,32 @@ cd "$PROBLEM_ID"
 
 echo "Running validation for problem $PROBLEM_ID"
 
-for i in {1..14}; do
-    if [ -f "tests/${i}.in" ] && [ -f "tests/${i}.out" ]; then
-        echo "Running test case $i..."
+for infile in tests/*.in; do
+    if [ -f "$infile" ]; then
+        # Extract test case number from filename (e.g., 1.in -> 1)
+        i=$(basename "$infile" .in)
+        outfile="tests/${i}.out"
 
-        # Run the Go program with input from .in file
-        output=$(go run main.go < "tests/${i}.in")
+        if [ -f "$outfile" ]; then
+            echo "Running test case $i..."
 
-        # Get expected output
-        expected=$(cat "tests/${i}.out")
+            # Run the Go program with input from .in file
+            output=$(go run main.go < "$infile")
 
-        # Compare outputs (trim trailing whitespace)
-        if [ "$(echo "$output" | sed 's/[[:space:]]*$//')" = "$(echo "$expected" | sed 's/[[:space:]]*$//')" ]; then
-            echo "Test $i: PASS"
+            # Get expected output
+            expected=$(cat "$outfile")
+
+            # Compare outputs (trim trailing whitespace)
+            if [ "$(echo "$output" | sed 's/[[:space:]]*$//')" = "$(echo "$expected" | sed 's/[[:space:]]*$//')" ]; then
+                echo "Test $i: PASS"
+            else
+                echo "Test $i: FAIL"
+                echo "Expected: $expected"
+                echo "Got:      $output"
+            fi
         else
-            echo "Test $i: FAIL"
-            echo "Expected: $expected"
-            echo "Got:      $output"
+            echo "Output file for test case $i missing"
         fi
-    else
-        echo "Test case $i files missing"
     fi
 done
 
